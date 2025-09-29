@@ -1,7 +1,9 @@
 package br.com.alura.projeto.course;
 
+import br.com.alura.projeto.category.Category;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
 public class NewCourseForm {
@@ -18,6 +20,9 @@ public class NewCourseForm {
     @NotBlank
     @Email
     private String instructorEmail;
+
+    @NotNull
+    private Long categoryId;
 
     public NewCourseForm() {}
 
@@ -51,5 +56,13 @@ public class NewCourseForm {
 
     public void setInstructorEmail(String instructorEmail) {
         this.instructorEmail = instructorEmail;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 }
