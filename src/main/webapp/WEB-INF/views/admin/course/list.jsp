@@ -1,13 +1,14 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Lista de Cursos</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/assets/external-libs/bootstrap/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .status-active {
             color: #28a745;
@@ -63,17 +64,25 @@
                             </c:when>
                             <c:otherwise>
                                 <span class="status-inactive">INATIVO</span>
-                                <br><small>Inativado em: <fmt:formatDate value="${course.inactivatedAt}" pattern="dd/MM/yyyy HH:mm"/></small>
+                                <c:if test="${course.inactivatedAt != null}">
+                                    <br><small>Inativado em: ${course.inactivatedAt}</small>
+                                </c:if>
                             </c:otherwise>
                         </c:choose>
                     </td>
-                    <td><fmt:formatDate value="${course.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                    <td>${course.createdAt}</td>
                     <td>
                         <a class="btn btn-primary btn-sm" href="/admin/course/edit/${course.code}">Editar</a>
-                        <c:if test="${course.active}">
-                            <button class="btn btn-warning btn-sm btn-inactivate" 
-                                    onclick="inactivateCourse('${course.code}')">Inativar</button>
-                        </c:if>
+                        <c:choose>
+                            <c:when test="${course.active}">
+                                <button class="btn btn-warning btn-sm btn-inactivate" 
+                                        onclick="inactivateCourse('${course.code}')">Inativar</button>
+                            </c:when>
+                            <c:otherwise>
+                                <button class="btn btn-success btn-sm btn-activate" 
+                                        onclick="activateCourse('${course.code}')">Ativar</button>
+                            </c:otherwise>
+                        </c:choose>
                     </td>
                 </tr>
             </c:forEach>
@@ -91,26 +100,38 @@
 <script>
 function inactivateCourse(courseCode) {
     if (confirm('Tem certeza que deseja inativar o curso "' + courseCode + '"?')) {
-        fetch('/course/' + courseCode + '/inactive', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                alert('Curso inativado com sucesso!');
-                location.reload();
-            } else {
-                return response.text().then(text => {
-                    alert('Erro ao inativar curso: ' + text);
-                });
-            }
-        })
-        .catch(error => {
-            alert('Erro ao inativar curso: ' + error.message);
-        });
+        toggleCourseStatus(courseCode, 'inactive', 'inativado');
     }
+}
+
+function activateCourse(courseCode) {
+    if (confirm('Tem certeza que deseja ativar o curso "' + courseCode + '"?')) {
+        toggleCourseStatus(courseCode, 'active', 'ativado');
+    }
+}
+
+function toggleCourseStatus(courseCode, action, actionText) {
+    fetch('/course/' + courseCode + '/' + action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.text().then(text => {
+                alert('Curso ' + actionText + ' com sucesso!');
+                location.reload();
+            });
+        } else {
+            return response.text().then(text => {
+                alert('Erro ao ' + actionText.replace('ado', 'ar') + ' curso: ' + text);
+            });
+        }
+    })
+    .catch(error => {
+        alert('Erro ao ' + actionText.replace('ado', 'ar') + ' curso: ' + error.message);
+    });
 }
 </script>
 

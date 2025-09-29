@@ -8,7 +8,9 @@
 <head>
     <title>Cadastrar novo Curso</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/assets/external-libs/bootstrap/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .error-message {
             color: #dc3545;
@@ -54,7 +56,7 @@
                     <label for="course-code">Código do Curso: <span class="text-danger">*</span></label>
                     <form:input path="code" id="course-code" cssClass="form-control" 
                                placeholder="Ex: spring-boot-avancado" required="required"
-                               pattern="[a-zA-Z0-9-]+" maxlength="10"/>
+                               pattern="[a-zA-Z0-9\\-]+" maxlength="10"/>
                     <div class="code-help">
                         Entre 4 e 10 caracteres. Apenas letras, números e hífens. Espaços serão convertidos automaticamente.
                     </div>

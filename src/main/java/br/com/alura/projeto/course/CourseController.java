@@ -56,10 +56,20 @@ public class CourseController {
     }
 
     @PostMapping("/course/{code}/inactive")
-    public ResponseEntity<?> updateStatus(@PathVariable("code") String courseCode) {
+    public ResponseEntity<?> inactivateCourse(@PathVariable("code") String courseCode) {
         try {
             courseService.inactivateCourse(courseCode);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok().body("Course inactivated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/course/{code}/active")
+    public ResponseEntity<?> activateCourse(@PathVariable("code") String courseCode) {
+        try {
+            courseService.activateCourse(courseCode);
+            return ResponseEntity.ok().body("Course activated successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

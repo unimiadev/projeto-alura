@@ -19,7 +19,7 @@ public class CourseDTO {
         this.name = course.getName();
         this.code = course.getCode();
         this.instructorEmail = course.getInstructorEmail();
-        this.categoryName = course.getCategory().getName();
+        this.categoryName = course.getCategory() != null ? course.getCategory().getName() : "N/A";
         this.description = course.getDescription();
         this.status = course.getStatus();
         this.inactivatedAt = course.getInactivatedAt();
