@@ -65,4 +65,8 @@ public class NewCourseForm {
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
     }
+
+    public Course toModel(Category category) {
+        return new Course(name, code, instructorEmail, category, description);
+    }
 }
