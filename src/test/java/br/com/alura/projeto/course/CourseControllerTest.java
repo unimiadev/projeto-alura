@@ -10,13 +10,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CourseController.class)
@@ -149,5 +150,70 @@ class CourseControllerTest {
                 .andExpect(model().attributeExists("categories"));
 
         verify(courseService, never()).save(any());
+    }
+
+    @Test
+    void shouldShowEditFormWhenCourseExists() throws Exception {
+        when(courseService.findByCode("spring-boot")).thenReturn(Optional.of(course));
+        when(categoryRepository.findAll()).thenReturn(Arrays.asList(category));
+
+        mockMvc.perform(get("/admin/course/edit/spring-boot"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/course/editForm"))
+                .andExpect(model().attributeExists("editCourseForm"))
+                .andExpect(model().attributeExists("course"))
+                .andExpect(model().attributeExists("categories"));
+
+        verify(courseService).findByCode("spring-boot");
+        verify(categoryRepository).findAll();
+    }
+
+    @Test
+    void shouldRedirectWhenCourseNotFoundForEdit() throws Exception {
+        when(courseService.findByCode("nonexistent")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/admin/course/edit/nonexistent"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/courses"));
+
+        verify(courseService).findByCode("nonexistent");
+    }
+
+    @Test
+    void shouldUpdateCourseSuccessfully() throws Exception {
+        when(courseService.findByCode("spring-boot")).thenReturn(Optional.of(course));
+        doNothing().when(courseService).updateCourse(any(Course.class), any(EditCourseForm.class));
+
+        mockMvc.perform(post("/admin/course/edit/spring-boot")
+                .param("name", "Spring Boot Advanced")
+                .param("code", "spring-boot")
+                .param("instructorEmail", "instructor@alura.com")
+                .param("categoryId", "1")
+                .param("description", "Advanced Spring Boot course"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/courses"));
+
+        verify(courseService).findByCode("spring-boot");
+        verify(courseService).updateCourse(any(Course.class), any(EditCourseForm.class));
+    }
+
+    @Test
+    void shouldShowErrorWhenUpdateFails() throws Exception {
+        when(courseService.findByCode("spring-boot")).thenReturn(Optional.of(course));
+        when(categoryRepository.findAll()).thenReturn(Arrays.asList(category));
+        doThrow(new IllegalArgumentException("Course code already exists"))
+                .when(courseService).updateCourse(any(Course.class), any(EditCourseForm.class));
+
+        mockMvc.perform(post("/admin/course/edit/spring-boot")
+                .param("name", "Spring Boot Advanced")
+                .param("code", "existing-code")
+                .param("instructorEmail", "instructor@alura.com")
+                .param("categoryId", "1")
+                .param("description", "Advanced Spring Boot course"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/course/editForm"))
+                .andExpect(model().attributeExists("error"));
+
+        verify(courseService).updateCourse(any(Course.class), any(EditCourseForm.class));
     }
 }

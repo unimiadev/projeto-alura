@@ -86,6 +86,37 @@ public class CourseService {
         courseRepository.save(course);
     }
 
+    @Transactional
+    public void updateCourse(Course course, EditCourseForm form) {
+        if (!userRepository.existsByEmail(form.getInstructorEmail())) {
+            throw new IllegalArgumentException("Instructor not found");
+        }
+
+        Category category = categoryRepository.findById(form.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+        String normalizedCode = normalizeCode(form.getCode());
+        if (!course.getCode().equals(normalizedCode) && 
+            courseRepository.existsByCode(normalizedCode)) {
+            throw new IllegalArgumentException("Course code already exists");
+        }
+
+        if (!CODE_PATTERN.matcher(normalizedCode).matches()) {
+            throw new IllegalArgumentException("Course code must contain only lowercase letters, numbers and hyphens");
+        }
+
+        if (normalizedCode.length() < 4 || normalizedCode.length() > 10) {
+            throw new IllegalArgumentException("Course code must be between 4 and 10 characters");
+        }
+
+        course.setName(form.getName());
+        course.setCode(normalizedCode);
+        course.setInstructorEmail(form.getInstructorEmail());
+        course.setCategory(category);
+        course.setDescription(form.getDescription());
+
+        courseRepository.save(course);
+    }
+
     private void validateCourseForm(NewCourseForm form) {
         String code = form.getCode();
         
