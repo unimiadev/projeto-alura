@@ -1,5 +1,12 @@
 package br.com.alura.projeto.enrollment;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,13 +18,24 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/enrollments")
+@Tag(name = "Matrículas", description = "API para gerenciamento de matrículas de alunos em cursos")
 public class EnrollmentController {
 
     @Autowired
     private EnrollmentService enrollmentService;
 
     @PostMapping
-    public ResponseEntity<?> enrollStudent(@Valid @RequestBody NewEnrollmentRequest request) {
+    @Operation(summary = "Matricular aluno em curso", 
+               description = "Realiza a matrícula de um aluno em um curso específico")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Matrícula realizada com sucesso",
+                    content = @Content(schema = @Schema(implementation = EnrollmentResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Dados inválidos ou regra de negócio violada",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> enrollStudent(
+            @Parameter(description = "Dados da matrícula", required = true)
+            @Valid @RequestBody NewEnrollmentRequest request) {
         try {
             Enrollment enrollment = enrollmentService.enrollStudent(request);
             EnrollmentResponse response = new EnrollmentResponse(enrollment);
@@ -28,7 +46,13 @@ public class EnrollmentController {
     }
 
     @GetMapping("/student/{email}")
-    public ResponseEntity<List<EnrollmentResponse>> getStudentEnrollments(@PathVariable String email) {
+    @Operation(summary = "Listar matrículas do aluno", 
+               description = "Retorna todas as matrículas de um aluno específico")
+    @ApiResponse(responseCode = "200", description = "Lista de matrículas retornada com sucesso",
+                content = @Content(schema = @Schema(implementation = EnrollmentResponse.class)))
+    public ResponseEntity<List<EnrollmentResponse>> getStudentEnrollments(
+            @Parameter(description = "Email do aluno", required = true, example = "aluno@email.com")
+            @PathVariable String email) {
         List<Enrollment> enrollments = enrollmentService.getStudentEnrollments(email);
         List<EnrollmentResponse> responses = enrollments.stream()
                 .map(EnrollmentResponse::new)

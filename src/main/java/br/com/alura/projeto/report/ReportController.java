@@ -1,5 +1,11 @@
 package br.com.alura.projeto.report;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -51,7 +57,13 @@ public class ReportController {
 
     @GetMapping("/api/reports/most-accessed")
     @ResponseBody
+    @Tag(name = "Relatórios", description = "API para geração de relatórios de cursos")
+    @Operation(summary = "Cursos mais acessados", 
+               description = "Retorna os cursos mais acessados ordenados por número de matrículas")
+    @ApiResponse(responseCode = "200", description = "Lista de cursos mais acessados",
+                content = @Content(schema = @Schema(implementation = CourseAccessReportDTO.class)))
     public ResponseEntity<List<CourseAccessReportDTO>> getMostAccessedCourses(
+            @Parameter(description = "Limite de resultados", example = "10")
             @RequestParam(defaultValue = "10") int limit) {
         List<CourseAccessReportDTO> courses = reportService.getMostAccessedCoursesReport(limit);
         return ResponseEntity.ok(courses);

@@ -1,15 +1,19 @@
 package br.com.alura.projeto.enrollment;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+@Schema(description = "Dados para matrícula de aluno em curso")
 public class NewEnrollmentRequest {
 
     @NotBlank
     @Email
+    @Schema(description = "Email do aluno", example = "joao.silva@student.com", required = true)
     private String studentEmail;
 
     @NotBlank
+    @Schema(description = "Código do curso", example = "spring-boot", required = true)
     private String courseCode;
 
     @Deprecated
