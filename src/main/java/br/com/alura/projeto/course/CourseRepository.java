@@ -17,4 +17,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT c FROM Course c JOIN FETCH c.category WHERE c.status = :status ORDER BY c.createdAt DESC")
     List<Course> findByStatusWithCategory(CourseStatus status);
+
+    @Query("SELECT c FROM Course c JOIN FETCH c.category WHERE c.code = :code")
+    Optional<Course> findByCodeWithCategory(String code);
 }
