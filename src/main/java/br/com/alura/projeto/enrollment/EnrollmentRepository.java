@@ -31,4 +31,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     @Query("SELECT e FROM Enrollment e JOIN FETCH e.student JOIN FETCH e.course")
     List<Enrollment> findAllWithStudentAndCourse();
+
+    Long countByCourse(Course course);
+
+    Long countByCourseAndStatus(Course course, EnrollmentStatus status);
 }

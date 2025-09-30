@@ -34,7 +34,11 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h1>Cursos</h1>
-            <a class="btn btn-info new-button" href="/admin/course/new">Cadastrar novo</a>
+            <div class="btn-group" role="group">
+                <a class="btn btn-info new-button" href="/admin/course/new">Cadastrar novo</a>
+                <a class="btn btn-secondary" href="/admin/reports">📊 Relatórios</a>
+                <a class="btn btn-outline-secondary" href="/admin/categories">📂 Categorias</a>
+            </div>
         </div>
         <table class="panel-body table table-hover">
             <thead>

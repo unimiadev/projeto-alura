@@ -20,4 +20,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT c FROM Course c JOIN FETCH c.category WHERE c.code = :code")
     Optional<Course> findByCodeWithCategory(String code);
+
+    @Query("SELECT c FROM Course c JOIN FETCH c.category WHERE c.category.code = :categoryCode ORDER BY c.createdAt DESC")
+    List<Course> findByCategoryCode(String categoryCode);
 }
