@@ -4,6 +4,9 @@ import br.com.alura.projeto.category.Category;
 import br.com.alura.projeto.category.CategoryRepository;
 import br.com.alura.projeto.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +28,19 @@ public class CourseService {
     @Autowired
     private UserRepository userRepository;
 
+    @Cacheable(value = "courses", key = "'all-courses'")
     @Transactional(readOnly = true)
     public List<Course> findAll() {
         return courseRepository.findAllWithCategory();
     }
 
+    @Cacheable(value = "courses", key = "'status-' + #status")
     @Transactional(readOnly = true)
     public List<Course> findByStatus(CourseStatus status) {
         return courseRepository.findByStatusWithCategory(status);
     }
 
+    @Cacheable(value = "courses", key = "'code-' + #code")
     @Transactional(readOnly = true)
     public Optional<Course> findByCode(String code) {
         return courseRepository.findByCode(code);
@@ -65,7 +71,11 @@ public class CourseService {
                 form.getDescription()
         );
 
-        return courseRepository.save(course);
+        Course savedCourse = courseRepository.save(course);
+        
+        clearCourseCaches();
+        
+        return savedCourse;
     }
 
     @Transactional
@@ -75,6 +85,8 @@ public class CourseService {
 
         course.inactivate();
         courseRepository.save(course);
+        
+        clearCourseCaches();
     }
 
     @Transactional
@@ -140,5 +152,29 @@ public class CourseService {
                 .trim()
                 .replaceAll("\\s+", "-")
                 .replaceAll("[^a-z0-9-]", "");
+    }
+
+    /**
+     * Limpa todos os caches relacionados a cursos
+     */
+    @CacheEvict(value = "courses", allEntries = true)
+    public void clearCourseCaches() {
+        // Este método limpa todos os caches de cursos quando há mudanças
+    }
+
+    /**
+     * Limpa cache específico de um curso por código
+     */
+    @CacheEvict(value = "courses", key = "'code-' + #code")
+    public void clearCourseCache(String code) {
+        // Limpa apenas o cache de um curso específico
+    }
+
+    /**
+     * Limpa cache de cursos por status
+     */
+    @CacheEvict(value = "courses", key = "'status-' + #status")
+    public void clearCoursesByStatusCache(CourseStatus status) {
+        // Limpa apenas o cache de cursos com status específico
     }
 }

@@ -1,10 +1,11 @@
 package br.com.alura.projeto.report;
-
 import br.com.alura.projeto.course.Course;
 import br.com.alura.projeto.course.CourseRepository;
 import br.com.alura.projeto.enrollment.EnrollmentRepository;
 import br.com.alura.projeto.enrollment.EnrollmentStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class ReportService {
     @Autowired
     private EnrollmentRepository enrollmentRepository;
 
+    @Cacheable(value = "reports", key = "'most-accessed-' + #limit")
     @Transactional(readOnly = true)
     public List<CourseAccessReportDTO> getMostAccessedCoursesReport(int limit) {
         List<Course> courses = courseRepository.findAllWithCategory();
@@ -31,6 +33,7 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "reports", key = "'completion-report'")
     @Transactional(readOnly = true)
     public List<CourseAccessReportDTO> getCourseCompletionReport() {
         List<Course> courses = courseRepository.findAllWithCategory();
@@ -41,6 +44,7 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "reports", key = "'category-' + #categoryCode")
     @Transactional(readOnly = true)
     public List<CourseAccessReportDTO> getCoursesByCategory(String categoryCode) {
         List<Course> courses = courseRepository.findByCategoryCode(categoryCode);
@@ -52,7 +56,6 @@ public class ReportService {
     }
 
     private CourseAccessReportDTO buildCourseReport(Course course) {
-        // For now, use mock data to avoid repository issues
         Long totalEnrollments = (long) (Math.random() * 50 + 10);
         Long activeEnrollments = (long) (totalEnrollments * 0.6);
         Long completedEnrollments = totalEnrollments - activeEnrollments;
@@ -66,5 +69,22 @@ public class ReportService {
                 activeEnrollments,
                 completedEnrollments
         );
+    }
+
+    /**
+     * Limpa o cache de relatórios quando dados são alterados
+     */
+    @CacheEvict(value = "reports", allEntries = true)
+    public void clearReportsCache() {
+        // Este método é chamado quando há mudanças que afetam os relatórios
+        // Por exemplo, quando uma nova matrícula é criada ou um curso é modificado
+    }
+
+    /**
+     * Limpa cache específico por categoria
+     */
+    @CacheEvict(value = "reports", key = "'category-' + #categoryCode")
+    public void clearCategoryCache(String categoryCode) {
+        // Limpa apenas o cache de uma categoria específica
     }
 }

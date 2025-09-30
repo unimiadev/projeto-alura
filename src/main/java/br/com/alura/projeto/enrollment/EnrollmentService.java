@@ -7,6 +7,8 @@ import br.com.alura.projeto.user.Role;
 import br.com.alura.projeto.user.User;
 import br.com.alura.projeto.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,14 +47,20 @@ public class EnrollmentService {
             throw new IllegalArgumentException("Student is already enrolled in this course");
         }
         Enrollment enrollment = new Enrollment(student, course);
-        return enrollmentRepository.save(enrollment);
+        Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+        
+        clearEnrollmentCaches(request.getStudentEmail(), request.getCourseCode());
+        
+        return savedEnrollment;
     }
 
+    @Cacheable(value = "enrollments", key = "'student-' + #studentEmail")
     @Transactional(readOnly = true)
     public List<Enrollment> getStudentEnrollments(String studentEmail) {
         return enrollmentRepository.findByStudentEmail(studentEmail);
     }
 
+    @Cacheable(value = "enrollments", key = "'course-' + #courseCode")
     @Transactional(readOnly = true)
     public List<Enrollment> getCourseEnrollments(String courseCode) {
         return enrollmentRepository.findByCourseCode(courseCode);
@@ -89,9 +97,35 @@ public class EnrollmentService {
         enrollmentRepository.save(enrollment);
     }
 
+    @Cacheable(value = "course-stats", key = "'active-count-' + #courseCode")
     @Transactional(readOnly = true)
     public Long getActiveEnrollmentCount(String courseCode) {
         return enrollmentRepository.countActiveByCourseCode(courseCode);
+    }
+
+    /**
+     * Limpa caches relacionados a matrículas quando há mudanças
+     */
+    @CacheEvict(value = {"enrollments", "course-stats"}, allEntries = true)
+    public void clearEnrollmentCaches(String studentEmail, String courseCode) {
+        // Este método limpa os caches quando há mudanças nas matrículas
+        // Também pode notificar o ReportService para limpar caches de relatórios
+    }
+
+    /**
+     * Limpa cache específico de um estudante
+     */
+    @CacheEvict(value = "enrollments", key = "'student-' + #studentEmail")
+    public void clearStudentCache(String studentEmail) {
+        // Limpa apenas o cache de um estudante específico
+    }
+
+    /**
+     * Limpa cache específico de um curso
+     */
+    @CacheEvict(value = {"enrollments", "course-stats"}, key = "'course-' + #courseCode")
+    public void clearCourseCache(String courseCode) {
+        // Limpa apenas o cache de um curso específico
     }
 
     @Transactional(readOnly = true)
